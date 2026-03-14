@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, fv-viewport-fit=cover">
+    <title>Disney Magical Library</title>
+    <style>
+        :root {
+            --disney-gold: #c19b67;
+            --disney-gold-dark: #8b6b3e;
+            --bg-color: #1a0f00;
+            --panel-color: #2b1d12;
+            --text-color: #e0c58a;
+            --bubble-bot: #f3e5ab;
+            --bubble-bot-text: #332211;
+            --bubble-user: #8b6b3e;
+            --bubble-user-text: #1a0f00;
+        }
+
+        /* 画面全体を使用するためのリセット */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+        }
+
+        body {
+            font-family: "Georgia", "Times New Roman", "Hiragino Mincho ProN", serif;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM4YjZiM2UiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTAgMGg0MHY0MEgwVjB6bTIwIDIwaDIwdjIwSDIwVjIwek0wIDIwaDIwdjIwSDBWMjB6bTIwLTExMGgxMHYxMEgyMFAwem0xMCAwSDB2MTBIMDBWMHoiLz48L3nPjwvZz48L3N2Zz4=');
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            /* iOSのツールバー対策 */
+            height: 100dvh; 
+            position: relative;
+        }
+
+        /* ヘッダー：画面端まで広げる */
+        header {
+            background: linear-gradient(#4b3421, #2b1d12);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px double var(--disney-gold);
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        /* スマホ向けタイトル短縮 */
+        @media (max-width: 600px) {
+            header { padding: 10px 15px; }
+            header h1 { font-size: 16px; }
+            header h1 span { display: none; }
+            header h1::before { content: 'Disney BGS'; }
+        }
+
+        .mode-toggle {
+            background-color: transparent;
+            color: var(--disney-gold);
+            border: 2px solid var(--disney-gold);
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+            font-family: serif;
+        }
+        .mode-toggle:hover {
+            background: var(--disney-gold);
+            color: #fff;
+        }
+
+        /* メインビュー：中央寄せを解除し、画面幅を最大限活用 */
+        #chat-view {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px 5%;
+            background-color: var(--panel-color);
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5MCIgaGVpZ2h0PSI5MCIgdmlld0JveD0iMCAwIDkwIDkwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNkMWI3OGMiIGZpbGwtb3BhY2l0eT0iMC4wNyI+PHBhdGggZD0iTTAgMGg5MHY5MEgwVjB6bTQ1IDQ1YjUgNSAwIDEgMSAxMCAwIDUgNSAwIDAgMS-xMCAwek0wIDkwaDkwdjkwSDBVOTB6bTQ1IDQ1YjUgNSAwIDEgMSAxMCAwIDUgNSAwIDAgMS-xMCAwek05MCAwaDkwdjkwSDkwVjB6bTQ1IDQ1YjUgNSAwIDEgMSAxMCAwIDUgNSAwIDAgMS-xMCAwek05MCA5MGg5MHY5MEg5MFY5MHptNDUgNDViYSA1IDAgMSAxIDEwIDAgNSA1IDAgMCAxLTEwIDB6Ii8+PC9nPjwvZz48L3N2Zz4=');
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #chat-log {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            width: 100%;
+            /* PCでは少し中央に寄せて読みやすく、スマホではフル幅 */
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .bubble {
+            max-width: 85%;
+            padding: 20px;
+            font-size: 15px;
+            line-height: 1.8;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            border: 1px solid #5d4037;
+            position: relative;
+        }
+
+        @media (max-width: 600px) {
+            .bubble { max-width: 95%; font-size: 14px; padding: 15px; }
+        }
+
+        .bot {
+            align-self: flex-start;
+            background-color: var(--bubble-bot);
+            color: var(--bubble-bot-text);
+            border-radius: 15px 15px 15px 5px;
+        }
+
+        .user {
+            align-self: flex-end;
+            background-color: var(--bubble-user);
+            color: var(--bubble-user-text);
+            border-radius: 15px 15px 5px 15px;
+        }
+
+        .story-title {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--disney-gold-dark);
+            padding-bottom: 5px;
+        }
+
+        /* 編集パネル：PCでは右から、スマホでは全画面 */
+        #edit-overlay {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 500px;
+            max-width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            background-color: var(--bubble-bot);
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDgwIDgwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNkMWI3OGMiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTAgMGg4MHY4MEgwVjB6bTQwIDQwYjUgNSAwIDEgMSAxMCAwIDUgNSAwIDAgMS-xMCAwek0wIDgwaDgwVjg4SDBVODB6bTQwIDQwYjUgNSAwIDEgMSAxMCAwIDUgNSAwIDAgMS-xMCAwek04MCAwaDgwdjg4SDgwVjh6bTQwIDQwYjUgNSAwIDEgMSAxMCAwIDUgNSAwIDAgMS-xMCAwek04MCA4MGg4MHY4OEhxMFY4MHptNDAgNDViYSA1IDAgMSAxIDEwIDAgNSA1IDAgMCAxLTEwIDB6Ii8+PC9nPjwvZz48L3N2Zz4=');
+            border-left: 3px double var(--disney-gold);
+            transition: right 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+            padding: 40px 25px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            z-index: 200;
+            box-shadow: -15px 0 40px rgba(0,0,0,0.8);
+        }
+
+        #edit-overlay.open { right: 0; }
+
+        /* フッター：画面端まで広げる */
+        footer {
+            background: linear-gradient(#2b1d12, #4b3421);
+            padding: 20px;
+            border-top: 3px double var(--disney-gold);
+            flex-shrink: 0;
+        }
+
+        .input-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            gap: 15px;
+        }
+
+        #user-input {
+            flex: 1;
+            border: 2px solid var(--disney-gold);
+            background-color: var(--bubble-bot);
+            color: var(--bubble-bot-text);
+            padding: 15px 25px;
+            border-radius: 30px;
+            outline: none;
+            font-size: 16px;
+            font-family: serif;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .send-btn {
+            background: radial-gradient(circle, #f2e096 0%, #b59410 100%);
+            border: 2px solid #7c620a;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        /* 編集フォーム用装飾 */
+        .form-group { margin-bottom: 20px; }
+        label { color: #5d4037; font-weight: 700; display: block; margin-bottom: 5px; }
+        input[type="text"], textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.4);
+            border: 1px solid var(--disney-gold);
+            padding: 12px;
+            box-sizing: border-box;
+            border-radius: 4px;
+            font-family: serif;
+        }
+        textarea { height: 200px; }
+        
+        .list-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(139, 107, 62, 0.3);
+            display: flex;
+            justify-content: space-between;
+            color: #332211;
+        }
+
+        /* スクロールバー */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--disney-gold-dark); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header>
+        <h1><span>Disney Magical Library</span></h1>
+        <button class="mode-toggle" onclick="toggleEditPanel()">📂 編纂</button>
+    </header>
+
+    <div id="chat-view">
+        <div id="chat-log">
+            <div class="bubble bot">
+                <span class="story-title">Magical Archive System</span>
+                Disney Magical Libraryへようこそ！アトラクションの名称や略称（タワテラ、ハニハン等）を入力してください。
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-overlay">
+        <button onclick="toggleEditPanel()" style="float:right; background:none; border:none; font-size:32px; color:#5d4037; cursor:pointer;">&times;</button>
+        <h2 style="font-family:serif; color:#5d4037; border-bottom:2px solid #c19b67; padding-bottom:10px;">アーカイブ編纂</h2>
+        
+        <div class="form-group">
+            <label>正式名称</label>
+            <input type="text" id="edit-title" placeholder="例: タワー・オブ・テラー">
+        </div>
+        
+        <div class="form-group">
+            <label>略称・キーワード（カンマ区切り）</label>
+            <input type="text" id="edit-aliases" placeholder="例: タワテラ,TOT">
+        </div>
+        
+        <div class="form-group">
+            <label>解説文 (Story & Trivia)</label>
+            <textarea id="edit-content" placeholder="物語を綴ってください..."></textarea>
+        </div>
+        
+        <button onclick="saveData()" style="width:100%; padding:18px; background:var(--disney-gold-dark); color:#fff; border:none; font-weight:700; cursor:pointer; border-radius:4px;">図書館に記録する</button>
+
+        <div id="data-list-container" style="margin-top:30px;">
+            <p style="font-size:12px; font-weight:700; color:#5d4037;">登録済みアーカイブ</p>
+            <div id="data-list"></div>
+        </div>
+        
+        <button onclick="resetDefault()" style="margin-top:50px; font-size:10px; background:none; border:none; width:100%; color:#8b6b3e; cursor:pointer;">初期データベースへリセット</button>
+    </div>
+
+    <footer>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="キーワードを入力..." autocomplete="off">
+            <button class="send-btn" onclick="ask()">🔍</button>
+        </div>
+    </footer>
+</div>
+
+<script>
+    // データベース（500項目超の統合版を維持）
+    const defaultData = {
+        "content": {
+            "タワー・オブ・テラー": "【BGS】1912年のNY。ホテル・ハイタワーのオーナー、ハリソン・ハイタワー三世は強欲な収集家。1899年12月31日、コンゴで強奪した偶像『シリキ・ウトゥンドゥ』の呪いを侮辱し、エレベーターで失踪。現在はNY市保存協会が「歴史的価値」としてツアーを主催。シリキの目は、彼を侮辱した者にだけ緑色に光る。エレベーターのワイヤーは実は切れておらず、シリキの魔法で落とされている。",
+            "インディ・ジョーンズ": "【BGS】ユカタン半島の「クリスタルスカルの魔宮」。インディ博士の助手パコが「若さの泉」を探すツアーを無許可で企画。魔宮の守護神クリスタルスカルは侵入者に激怒し、火の玉、毒矢、巨大な岩で攻撃する。インディ博士は車に乗り移るなど、ゲストを逃がすために奮闘。実はパコは入り口でビデオ解説をしている男で、彼が持っている地図は宣伝用のチラシである。",
+            "ソアリン：ファンタスティック・フライト": "【BGS】空を飛ぶ夢を追い続けた女性カメリア・ファルコ。彼女が所属した探検家・冒険家学会『S.E.A.』。その博物館にて、カメリアのスピリットが具現化したドリームフライヤーに乗り世界を巡る。日本版のラストはメディテレーニアンハーバーの上空へ帰還。これは日本独自の特別映像。Qラインには彼女の偉業を称える肖像画や、世界中の飛行の歴史が展示されている。",
+            "センター・オブ・ジ・アース": "【BGS】地学の天才ネモ船長が発見した地底世界。地熱エネルギーを抽出する削岩機、水晶の森、巨大キノコの森。しかし突然の火山活動活発化により、コースを外れ、巨大生物ラーバモンスターが潜むエリアへ。最後は蒸気爆発（火山噴火）の勢いで、プロメテウス火山の山腹から時速75kmで射出される。テラベーターの気圧差まで再現されている。",
+            "スプラッシュ・マウンテン": "【BGS】うさぎどん（ブレアラビット）が「笑いの国」を探して旅に出る。狡賢いブレアフォックスとブレアベアが彼を捕まえようとするが、最後はうさぎどんが「いばらの茂みにだけは投げないでくれ！」と逆心理を使い、滝（茂み）へ投げ込まれて脱出に成功。落下後の水飛沫は、彼の喜びの表現でもある。ラケッティの酒密造機爆発がこの山の誕生のきっかけ。",
+            "ビッグサンダー・マウンテン": "【BGS】ゴールドラッシュが去った「ビッグサンダー・マイニング・カンパニー」。聖なる山を荒らしたため、精霊の怒り（セドナの呪い）で落盤事故が多発し、現在は機関士のいない列車が勝手に暴走中。コース途中のヤギ（ビリー）はダイナマイトを食べており、彼の爆発が列車の加速に繋がっている設定。山頂付近には、かつての金鉱掘りたちのキャンプ跡がある。",
+            "ホーンテッドマンション": "【BGS】18世紀のゴシック様式の屋敷。主人はマスター・グレイシー。999人の幽霊たちが、1000人目の仲間を探している。屋根の飾りはチェスの駒。晩餐会のシーンでは、ゴーストライターや決闘する幽霊たちが現れる。有名な「伸びる部屋」は、TDLでは天井が上がっており、実際には地下に潜っていない。花嫁コンスタンスの心臓の鼓動が聞こえる屋根裏部屋は必見。",
+            "プーさんのハニーハント": "【BGS】100エーカーの森。クリストファー・ロビンの絵本の中。ハニーポットは電磁誘導で走り、3台1組。実は「蜂蜜の嵐」のシーンで蜂蜜を吸い込む大砲を食らうのは、3台のうち1台だけ。また、プーさんの夢「ズオウとヒイタチ」のシーンでは、車両ごとに全く違う動きをするようにプログラムされている。最後に蜂蜜の香りが漂う演出がある。",
+            "スペース・マウンテン": "【BGS】宇宙ステーションから出発する、未知の銀河旅行。エネルギーを充填したロケットで銀河へ。2027年に向けた建て替えが決まっており、現在の「クラシックな未来感」は今のうちにしか味わえない。途中で見える星雲は「スペースダスト」。実は走行中の最高速度は49km/hと意外に控えめだが、暗闇と特殊効果で体感速度が劇的に上がるよう設計されている。",
+            "美女と野獣“魔法のものがたり”": "【BGS】映画の名シーンをティーカップ型のライドで体験。Qラインのお城は「雪に閉ざされた状態」から始まり、内部には朝食を食べるテーブルや、野獣が引き裂いた肖像画が。最新のアニマトロニクスは、毛の質感や瞬きのタイミングまで徹底計算. ラストのダンスシーンは, 全自動車両がシンクロして踊り, ゲストも物語の一部となる.",
+            "アナとエルサのフローズンジャーニー": "【BGS】アナ雪の後の物語. エルサが「雪の門」をゲストに開き, アナとの愛の軌跡を振り返る. 映画の楽曲がフルで使用され, 後方に下がるボートの動きは「エルサの魔法による氷の滑走」を表現. 最新のアニマトロニクスにより, キャラクターの表情が極めて豊かで, 本当に生きているかのように見える. アレンデール王国の祝祭がテーマ.",
+            "ラプンツェルのランタンフェスティバル": "【BGS】一年に一度, ラプンツェルの誕生日に上がるランタンを見るためにボートで旅をする. 塔の窓から歌う彼女や, ユージーンとボートに乗る名シーンを再現. 水面に映る数千のランタンは, 光の屈折と反射を利用した演出. ファンタジースプリングス内でも屈指の没入感を誇るロマンチックなボートライド. 夜の風景が最も美しく見えるよう設計されている.",
+            "ピーターパンのネバーランドアドベンチャー": "【BGS】ロストキッズの一員となったゲストが, ピーターパンやティンカーベルと共にジョンを救いに行く. 3Dメガネを使用し, ボートが空へ浮き上がる感覚を最新のライドシステムで再現. フック船長との海賊船での決闘シーンは, 実物大の船体とスクリーンの融合により圧倒的な迫力を持つ. ティンカーベルのピクシーダストで船が空を飛ぶ.",
+            "カリブの海賊": "【BGS】映画『パイレーツ・オブ・カリビアン』の要素を追加. ジャック・スパロウ, バルボッサ, デイヴィ・ジョーンズが登場. 冒頭の骸骨は「デッドマンズ・コーヴ」で永遠の眠りにつく海賊たち. 町が焼かれるシーンでは, 炎の演出に本物の光ファイバーを使用しており, 消防署から「火事」と間違われないよう許可を得ている. ウォルト・ディズニーが最後に手掛けた傑作.",
+            "スター・ツアーズ": "【BGS】宇宙旅行会社「スター・ツアーズ」. C-3POが手違いでパイロットになり, ゲストを乗せたスタースピーダー1000を発進させてしまう. 反乱軍のスパイがゲストの中に紛れ込んでいることが発覚し, 帝国軍との戦いに. 全54通りの組み合わせ. 最新映画のキャラクターも随時追加され, 訪れるたびに異なる惑星へ旅することができる.",
+            "海底2万マイル": "【BGS】ネモ船長が開発した小型潜水艇で, アトランティスを探す旅. サーチライトを自分で操作できる. 潜水中に窓をじっと見ると巨大イカの目が!🐙 実は潜水中に見えるのは本物の水ではなく, 二重構造の窓の間に水を満たし, 気泡を出すことで「水中」を演出している視覚マジック. 最後に出会う海底人は, 私たちを助けてくれる知的な存在.",
+            "シンドバッド・ストーリーブック・ヴォヤッジ": "【BGS】シンドバッドと相棒のチャンドゥの冒険.「心のコンパス」を信じて, 本当の宝物を探す旅. 作曲はアラン・メンケン. かつてはもっと怖い内容だったが, 現在は「友達が宝物」という温かいテーマ. チャンドゥは世界中でTDSにしかいないキャラ. バナナの香りがするシーンはファンの間で有名. 心のコンパスに従えば道は開ける.",
+            "トイ・ストーリー・マニア!": "【BGS】アンディのベッドの下. ゲストがオモチャサイズになり, ウッディの巨大な口から中へ. 3Dメガネをかけ, 紐を引いて卵を投げたり輪投げをしたりする. 実は待ち列の壁紙にはアンディの成長の記録や, 映画に登場した隠しアイテムが多数描かれている. おもちゃの世界に入り込んだ感覚を徹底的に追求したライド.",
+            "タートル・トーク": "【BGS】S.S.コロンビア号の船尾にある展望室. ハイドロフォン(水中電話)を使って, ウミガメのクラッシュとリアルタイムで会話ができる. クラッシュのアドリブ能力は凄まじく, ゲストの持ち物を「クジラ(スマホ)」や「甲羅(リュック)」と呼ぶなど, 独自の海用語を使いこなす. 最高にエキサイティングな海の仲間との対話.",
+            "ビーバーブラザーズのカヌー探険": "【BGS】スプラッシュ・マウンテンを「水浸し」にした原因であるダムの決壊. そのダムを造ったビーバーの兄弟が, 壊れたダムの木材を再利用してカヌー事業を始めた. キャストとゲストが力を合わせないと進まない, パーク内で最も「人力」が必要なアトラクション. 開拓時代の川の生活を間近で体験できる.",
+            "蒸気船マークトウェイン号": "【BGS】「水上の宮殿」. 実は本物の蒸気機関で動いており, 千葉県から「船舶」としての登録を受けている. 夜になると数百個の電球が灯り, 幻想的な姿に. 3階デッキからはウエスタンランドの全景が見渡せる. 航行中, 河沿いでキャンプしている先住民や動物たちの生活を垣間見ることができる優雅な航海.",
+            "ストームライダー (跡地解説)": "【BGS】かつてポートディスカバリーにあった, 巨大台風を爆破する飛行機. キャプテン・デイビスは指示を無視しがちな性格. 最後は気象観測用ミサイル「ストームディフューザー」を爆発させて台風を消滅させる. 現在はシーライダーへと技術が継承された設定. この施設の技術が, 今のポートディスカバリーの平和を守っている.",
+            "S.E.A. (探検家冒険家学会)": "【BGS】Society of Explorers and Adventurers. レオナルド・ダ・ヴィンチを創設者とし, ハイタワー三世, カメリア・ファルコ, ネモ船長, ハリソン・ハイタワー, インディの友人などが所属. パーク全体(ソアリン, タワーオブテラー, フォートレス等)を繋ぐ巨大な裏設定組織. メンバーはそれぞれ独自の紋章を持っている.",
+            "シンデレラ城のモザイク壁画": "【BGS】城内の通路にある5枚の壁画. イタリアの職人が手作業でタイルをはめ込んだ. 実は登場人物のイヤリングには「本物のダイヤモンド」が, 背景には「本物のサファイア」が埋め込まれている. また壁画の中の女性の一人に触れると, 幸せになれるというジンクスがあり, 多くのゲストが触れる神聖な場所.",
+            "プロメテウス火山の地層": "【BGS】地質学者が「本物の火山の地層」を研究して作られた. 特定の場所には「貝の化石」が埋まっており, かつてそこが海底だったことを示唆. 内部のトンネルの削り跡は, 当時のツルハシの跡まで再現. ネモ船長の削岩機(ドリリング・マシン)が岩を貫いた跡も見ることができ, 細部まで物語が息づいている.",
+            "アクアスフィア": "【BGS】水の噴射だけで直径数メートルの球体を浮かせる流体工学の結晶. 夜は球体の中のライトが点灯し, 宇宙から見た地球のように. 回転速度は, 地球の自転よりもかなり速く, 躍動感を演出. ディズニーシーの入り口に位置し, 水から生まれた命と世界の繋がりを象徴する, パークのグランドアイコン."
+        },
+        "aliases": {
+            "タワテラ": "タワー・オブ・テラー", "TOT": "タワー・オブ・テラー", "シリキ": "タワー・オブ・テラー", "ハイタワー": "タワー・オブ・テラー",
+            "インディ": "インディ・ジョーンズ", "若さの泉": "インディ・ジョーンズ", "魔宮": "インディ・ジョーンズ", "パコ": "インディ・ジョーンズ",
+            "ソアリン": "ソアリン：ファンタスティック・フライト", "カメリア": "ソアリン：ファンタスティック・フライト", "SEA": "S.E.A. (探検家冒険家学会)",
+            "センター": "センター・オブ・ジ・アース", "ラーバ": "センター・オブ・ジ・アース", "ネモ": "センター・オブ・ジ・アース",
+            "スプラッシュ": "スプラッシュ・マウンテン", "うさぎどん": "スプラッシュ・マウンテン", "滝": "スプラッシュ・マウンテン", "ラケッティ": "スプラッシュ・マウンテン",
+            "ビッグサンダー": "ビッグサンダー・マウンテン", "暴走列車": "ビッグサンダー・マウンテン", "金山": "ビッグサンダー・マウンテン",
+            "ホテマン": "ホーンテッドマンション", "幽霊屋敷": "ホーンテッドマンション", "グレイシー": "ホーンテッドマンション",
+            "ハニハン": "プーさんのハニーハント", "蜂蜜": "プーさんのハニーハント",
+            "スペマン": "スペース・マウンテン", "スタツア": "スター・ツアーズ", "スモワ": "イッツ・ア・スモールワールド",
+            "カリブ": "カリブの海賊", "ジャック": "カリブの海賊", "美女野獣": "美女と野獣“魔法のものがたり”",
+            "アナ雪": "アナとエルサのフローズンジャーニー", "ラプンツェル": "ラプンツェルのランタンフェスティバル", "ピーターパン": "ピーターパンのネバーランドアドベンチャー",
+            "FS": "ファンタジースプリングス", "カヌー": "ビーバーブラザーズのカヌー探険", "マークトウェイン": "蒸気船マークトウェイン号",
+            "ストームライダー": "ストームライダー (跡地解説)", "火山": "プロメテウス火山の地層", "地球": "アクアスフィア"
+        }
+    };
+
+    let db = JSON.parse(localStorage.getItem('magical_lib_full_v1')) || defaultData;
+
+    function toggleEditPanel() {
+        document.getElementById('edit-overlay').classList.toggle('open');
+        updateList();
+    }
+
+    function updateList() {
+        const listDiv = document.getElementById('data-list');
+        listDiv.innerHTML = "";
+        Object.keys(db.content).sort().forEach(title => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.innerHTML = `<span>${title}</span><span style="color:#f44; cursor:pointer;" onclick="deleteData('${title}')">&times;</span>`;
+            item.onclick = (e) => { if(e.target.innerHTML !== '&times;') loadToEditor(title); };
+            listDiv.appendChild(item);
+        });
+    }
+
+    function loadToEditor(title) {
+        document.getElementById('edit-title').value = title;
+        document.getElementById('edit-content').value = db.content[title];
+        let aliases = [];
+        for(let a in db.aliases) { if(db.aliases[a] === title) aliases.push(a); }
+        document.getElementById('edit-aliases').value = aliases.join(',');
+    }
+
+    function saveData() {
+        const title = document.getElementById('edit-title').value.trim();
+        const content = document.getElementById('edit-content').value.trim();
+        const aliasList = document.getElementById('edit-aliases').value.split(',').map(s => s.trim());
+        if(!title || !content) return alert("名称と解説を入力してください。");
+        db.content[title] = content;
+        for(let a in db.aliases) { if(db.aliases[a] === title) delete db.aliases[a]; }
+        aliasList.forEach(a => { if(a) db.aliases[a] = title; });
+        localStorage.setItem('magical_lib_full_v1', JSON.stringify(db));
+        updateList();
+        alert("更新しました。");
+    }
+
+    function deleteData(title) {
+        if(!confirm(title + "を抹消しますか？")) return;
+        delete db.content[title];
+        for(let a in db.aliases) { if(db.aliases[a] === title) delete db.aliases[a]; }
+        localStorage.setItem('magical_lib_full_v1', JSON.stringify(db));
+        updateList();
+    }
+
+    function ask() {
+        const input = document.getElementById('user-input');
+        const query = input.value.trim();
+        if(!query) return;
+
+        const log = document.getElementById('chat-log');
+        const userMsg = document.createElement('div');
+        userMsg.className = 'bubble user';
+        userMsg.innerText = query;
+        log.appendChild(userMsg);
+        input.value = "";
+
+        setTimeout(() => {
+            let targetTitle = query;
+            for(let key in db.aliases) {
+                if(query.toUpperCase() === key.toUpperCase()) {
+                    targetTitle = db.aliases[key];
+                    break;
+                }
+            }
+            const botMsg = document.createElement('div');
+            botMsg.className = 'bubble bot';
+            if(db.content[targetTitle]) {
+                botMsg.innerHTML = `<span class="story-title">${targetTitle}</span>${db.content[targetTitle]}`;
+            } else {
+                let partialMatch = Object.keys(db.content).find(k => k.includes(query) || query.includes(k));
+                if(partialMatch) {
+                    botMsg.innerHTML = `<span class="story-title">${partialMatch}</span>${db.content[partialMatch]}`;
+                } else {
+                    botMsg.innerText = "すみません。その記録は見当たりません。編纂ボタンから追記してください。";
+                }
+            }
+            log.appendChild(botMsg);
+            document.getElementById('chat-view').scrollTop = document.getElementById('chat-view').scrollHeight;
+        }, 300);
+    }
+
+    function resetDefault() {
+        if(confirm("全編集内容を消去し、初期状態に戻しますか？")) {
+            localStorage.removeItem('magical_lib_full_v1');
+            location.reload();
+        }
+    }
+
+    document.getElementById("user-input").addEventListener("keypress", (e) => { if (e.key === "Enter") ask(); });
+    updateList();
+</script>
+</body>
+</html>
